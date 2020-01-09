@@ -4,7 +4,7 @@ import math
 import time
 
 WIDTH, HEIGHT = 1300, 800
-NODE_SIZE = 10
+NODE_SIZE = 15
 
 
 class Node(object):
@@ -83,7 +83,10 @@ def getPath(win, nodes, start: Node, end: Node):
         open = sorted(open, key=lambda n: n.fCost)
         current = open[0]
         if current != start and current != end:
-            current.draw(win, "#{:06x}".format(int(current.fCost / biggestCost * 1000000)))
+            current.draw(win, "#{:06x}".format(int(current.fCost / biggestCost * 100000)))
+            coords = getGraphCoords(current.x, current.y)
+            win.create_text(coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2, text=round(math.sqrt(current.fCost)),
+                            fill="white")
         open.remove(current)
         closed.append(current)
 
@@ -99,10 +102,13 @@ def getPath(win, nodes, start: Node, end: Node):
                 node.hCost = getDistanceSquared(node, end)
                 node.fCost = node.gCost + node.hCost
                 node.parent = current
+
                 if node != end:
                     node.draw(win, "lightblue")
                 if node not in open:
                     open.append(node)
+                coords = getGraphCoords(node.x, node.y)
+                win.create_text(coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2, text=round(math.sqrt(node.fCost)))
         win.update()
         # time.sleep(.05)
 
