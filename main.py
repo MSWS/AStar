@@ -6,7 +6,7 @@ import cv2
 import numpy
 
 WIDTH, HEIGHT = 1000, 800
-NODE_SIZE = 5
+NODE_SIZE = 3
 
 
 class Node(object):
@@ -33,10 +33,10 @@ def main():
     while True:
         img = numpy.zeros((HEIGHT, WIDTH, 3), numpy.uint8)
         nodes = generateNodes(img)
-        # start = getRandomNode(nodes)
-        # end = getRandomNode(nodes)
-        start = nodes[0][0]
-        end = nodes[len(nodes) - 1][len(nodes[0]) - 1]
+        start = getRandomNode(nodes)
+        end = getRandomNode(nodes)
+        # start = nodes[0][0]
+        # end = nodes[len(nodes) - 1][len(nodes[0]) - 1]
         # print(win.checkMouse().x)
         # m = win.getMouse()
         # x, y = getNodeCoords(m.x, m.y)
@@ -117,7 +117,7 @@ def getPath(win, nodes, start: Node, end: Node):
                 node.parent = current
 
                 if node != end:
-                    node.draw(win, (128, 128, 255))
+                    node.draw(win, (128, 64, 64))
                 if node not in open:
                     open.append(node)
                 coords = getGraphCoords(node.x, node.y)
@@ -168,7 +168,9 @@ def generateNodes(win):
     nodes = []
     for x in range(0, WIDTH // NODE_SIZE):
         for y in range(0, HEIGHT // NODE_SIZE):
-            p = random.random() > .6
+            # p = y % 2 == 0 and x % 3 != 1 or random.random() > y*x / (x + 1) / (y+x+1)
+            p = y % 4 == 0 and x % 4 == 0 or random.random() > .6
+
             gx, gy = getGraphCoords(x, y)
             if len(nodes) <= x:
                 nodes.insert(x, [])
