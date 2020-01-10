@@ -1,11 +1,25 @@
 import random
 import math
-import time
 import cv2
 import numpy
 
 WIDTH, HEIGHT = 1000, 800
-NODE_SIZE = 10
+NODE_SIZE = 5
+
+
+def main():
+    while True:
+        img = numpy.zeros((HEIGHT, WIDTH, 3), numpy.uint8)
+        nodes = generateNodes(img)
+        start = getRandomNode(nodes)
+        end = getRandomNode(nodes)
+        start.passable = True
+        start.draw(img, (0, 0, 255))
+        end.passable = True
+        end.draw(img, (255, 0, 255))
+
+        getPath(img, nodes, start, end)
+        drawPath(img, start, end)
 
 
 class Node(object):
@@ -20,36 +34,9 @@ class Node(object):
 
     def draw(self, win, color=None):
         if not color:
-            color = (0, 255, 0) if self.passable else (50, 205, 50)
+            color = (0, 255, 0) if self.passable else (50, 150, 50)
         x, y = getGraphCoords(self.x, self.y)
         drawRect(win, x, y, x + NODE_SIZE, y + NODE_SIZE, color)
-
-
-def main():
-    # win = graphics.GraphWin("A*", WIDTH, HEIGHT)
-
-    # win.update()
-    while True:
-        img = numpy.zeros((HEIGHT, WIDTH, 3), numpy.uint8)
-        nodes = generateNodes(img)
-        start = getRandomNode(nodes)
-        end = getRandomNode(nodes)
-        # start = nodes[0][0]
-        # end = nodes[len(nodes) - 1][len(nodes[0]) - 1]
-        # print(win.checkMouse().x)
-        # m = win.getMouse()
-        # x, y = getNodeCoords(m.x, m.y)
-        # start = nodes[int(x)][int(y)]
-        start.passable = True
-        start.draw(img, (0, 0, 255))
-        # m = win.getMouse()
-        # x, y = getNodeCoords(m.x, m.y)
-        # end = nodes[int(x)][int(y)]
-        end.passable = True
-
-        end.draw(img, (128, 0, 128))
-        getPath(img, nodes, start, end)
-        drawPath(img, start, end)
 
 
 def drawPath(win, start, end):
@@ -57,7 +44,7 @@ def drawPath(win, start, end):
     while node and node != start:
         if node == start:
             break
-        node.draw(win, (100, 100, 100))
+        node.draw(win, (0, 0, 255))
         node = node.parent
         cv2.imshow("A*", win)
         cv2.waitKey(1)
@@ -65,8 +52,8 @@ def drawPath(win, start, end):
     cv2.imshow("A*", win)
 
 
-def drawRect(win, x1, y1, x2, y2, color=None):
-    # win.create_rectangle(x1, y1, x2, y2, fill=color, outline=color)
+def drawRect(win, x1, y1, x2, y2, color):
+    """Creates a filled rectangle"""
     cv2.rectangle(win, (x1, y1), (x2, y2), color, thickness=-1)
 
 
@@ -88,16 +75,13 @@ def getPath(win, nodes, start: Node, end: Node):
         open = sorted(open, key=lambda n: n.fCost)
         current = open[0]
         if current != start and current != end:
-            red = current.fCost / biggestCost * 2550
+            red = current.fCost / biggestCost * 255
             green = current.gCost / biggestCost * 50000
-            blue = current.hCost / biggestCost * 50000
-            current.draw(win, (blue, green, red))
+            blue = current.hCost / biggestCost * 5000
+            current.draw(win, (blue % 255, green % 255, red % 255))
             # coords = getGraphCoords(current.x, current.y)
-            # win.create_text(coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2,
-            #                 text=round(math.sqrt(current.fCost)),
-            #                 fill="white")
             # cv2.putText(win, str(round(math.sqrt(current.fCost))),
-            #             (coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2), cv2.FONT_HERSHEY_SIMPLEX, .4,
+            #             (coords[0], coords[1]), cv2.FONT_HERSHEY_SIMPLEX, .25,
             #             (255, 255, 255))
         open.remove(current)
         closed.append(current)
@@ -119,12 +103,10 @@ def getPath(win, nodes, start: Node, end: Node):
                     node.draw(win, (128, 64, 64))
                 if node not in open:
                     open.append(node)
-                coords = getGraphCoords(node.x, node.y)
-                # win.create_text(coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2,
-                #                 text=round(math.sqrt(node.fCost)))
+                # coords = getGraphCoords(node.x, node.y)
                 # cv2.putText(win, str(round(math.sqrt(node.fCost))),
-                #             (coords[0] + NODE_SIZE // 2, coords[1] + NODE_SIZE // 2), cv2.FONT_HERSHEY_SIMPLEX, .4,
-                #             (0, 0, 0))
+                #             (coords[0], coords[1]), cv2.FONT_HERSHEY_SIMPLEX, .25,
+                #             (255, 255, 255))
         # win.update()
         cv2.imshow("A*", win)
         cv2.waitKey(1)
@@ -133,8 +115,9 @@ def getPath(win, nodes, start: Node, end: Node):
 
 
 def getNeighbors(nodes, node: Node):
-    offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1), (0, 0)]
-    # offsets = [(-1, 0), (0, -1), (1, 0), (0, 1), (0, 0)]
+    """Returns all neighbors of a node"""
+    # offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1), (0, 0)]
+    offsets = [(-1, 0), (0, -1), (1, 0), (0, 1), (0, 0)]
     neighbors = []
     for offset in offsets:
         x = node.x + offset[0]
@@ -150,34 +133,54 @@ def getNeighbors(nodes, node: Node):
 
 
 def getDistance(node1: Node, node2: Node):
+    """
+    Returns the difference between two different nodes
+    Note that for comparison and speed, getDistanceSquared is better
+    """
     return math.sqrt(getDistanceSquared(node1, node2))
 
 
 def getDistanceSquared(node1: Node, node2: Node):
+    """Returns the distance (squared) between two different nodes"""
     return (node2.x - node1.x) ** 2 + (node2.y - node1.y) ** 2
 
 
 def getRandomNode(nodes):
-    x = random.randint(0, WIDTH // NODE_SIZE - 1)
-    y = random.randint(0, HEIGHT // NODE_SIZE - 1)
-    return nodes[x][y]
+    """Returns a randomly selected node from the 2D array"""
+    return nodes[random.randrange(len(nodes))][random.randrange(len(nodes[0]))]
 
 
 def generateNodes(win):
+    """Generates nodes and displays them"""
     nodes = []
     for x in range(0, WIDTH // NODE_SIZE):
         for y in range(0, HEIGHT // NODE_SIZE):
-            # p = y % 2 == 0 and x % 3 != 1 or random.random() > y*x / (x + 1) / (y+x+1)
-            p = y % 4 == 0 and x % 4 == 0 or random.random() > .6
-
-            gx, gy = getGraphCoords(x, y)
             if len(nodes) <= x:
                 nodes.insert(x, [])
             ar = nodes[x]
-            ar.append(Node(x, y, p))
-            ar[-1].draw(win)
+            ar.append(Node(x, y, True))
+            # ar[-1].draw(win)
 
             nodes[x] = ar
+
+    gridSize = 5
+
+    for x in range(0, WIDTH // NODE_SIZE, gridSize):
+        for y in range(0, WIDTH // NODE_SIZE, gridSize):
+            if random.random() < .4:
+                for i in range(gridSize):
+                    if y >= len(nodes[0]) or x + i >= len(nodes):
+                        break
+                    nodes[x + i][y].passable = False
+            if random.random() < .4:
+                for i in range(gridSize):
+                    if y + i >= len(nodes[0]) or x >= len(nodes):
+                        break
+                    nodes[x][y + i].passable = False
+
+    for nodeList in nodes:
+        for node in nodeList:
+            node.draw(win)
 
     return nodes
 
@@ -188,6 +191,7 @@ def getNodeCoords(x, y):
 
 
 def getGraphCoords(x, y):
+    """Converts from node coordinates to graphical coordinates"""
     return x * NODE_SIZE, y * NODE_SIZE
 
 
