@@ -1,4 +1,3 @@
-import graphics
 import random
 import math
 import time
@@ -6,7 +5,7 @@ import cv2
 import numpy
 
 WIDTH, HEIGHT = 1000, 800
-NODE_SIZE = 3
+NODE_SIZE = 10
 
 
 class Node(object):
